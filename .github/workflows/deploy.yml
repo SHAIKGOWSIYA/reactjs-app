@@ -20,23 +20,33 @@ jobs:
       with:
         node-version: '16'  # Replace with your preferred Node.js version
 
-    # Step 3: Install dependencies
+    # Step 3: Cache Node.js modules (optional)
+    - name: Cache Node.js modules
+      uses: actions/cache@v3
+      with:
+        path: node_modules
+        key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-modules-
+
+    # Step 4: Install dependencies
     - name: Install Dependencies
       run: npm install
 
-    # Step 4: Build the React app
+    # Step 5: Build the React app
     - name: Build React App
       run: npm run build
 
-    # Step 5: Deploy to S3
+    # Step 6: Deploy to S3
     - name: Deploy to S3
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION: 'ap-southeast-2'  # Replace with your AWS region
       run: |
-        aws s3 sync ./build s3://my-react-app-bucket-789 --delete
-    # Step 6: Invalidate CloudFront cache
+        aws s3 sync ./build s3://my-react-app-bucket-789 --delete  # Update with ./dist if using Vite
+
+    # Step 7: Invalidate CloudFront Cache
     - name: Invalidate CloudFront Cache
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
